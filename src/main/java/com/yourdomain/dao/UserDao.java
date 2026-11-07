@@ -33,7 +33,7 @@ public class UserDao {
         if (first) role = "ADMIN";
         String status = first ? "APPROVED" : "PENDING";
         String sql = "INSERT INTO users (username, password_hash, full_name, role, status) "
-                   + "VALUES (?, ?, ?, ?, ?)";
+                + "VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, username);
@@ -96,6 +96,25 @@ public class UserDao {
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, userId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.out.println("Database error: " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Updates a user's role and status. Inputs are upper-cased before being stored.
+     * Returns true if a row was updated.
+     * (The schema column is named "role", so that is what the SQL targets.)
+     */
+    public boolean updateUserRoleAndStatus(int userId, String newRole, String newStatus) {
+        String sql = "UPDATE users SET role = ?, status = ? WHERE id = ?;";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, newRole.toUpperCase());
+            ps.setString(2, newStatus.toUpperCase());
+            ps.setInt(3, userId);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             System.out.println("Database error: " + e.getMessage());
